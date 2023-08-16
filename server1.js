@@ -2,6 +2,7 @@ const express = require(`express`);
 const morgan = require(`morgan`);
 const cors = require(`cors`);
 const { v4: uuidv4 } = require("uuid");
+const bcrypt = require(`bcrypt`);
 
 const myId = () => uuidv4();
 const allIdAscending = [
@@ -35,6 +36,23 @@ app.listen(port, () => console.log(`I'm running`));
 app.use(cors());
 app.use(morgan(`tiny`));
 app.use(express.json());
+
+async function encryption(password) {
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    return hash;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function toEncryption() {
+  for (const user of data) {
+    user.password = await encryption(user.password);
+  }
+}
+toEncryption();
+
 app.get("/", (req, res) => {
   res.send(
     data.map(
@@ -49,22 +67,25 @@ app.get("/:id", (req, res) => {
   res.send(`id: ${user.id}, email: ${user.email}, password: ${user.password}`);
 });
 
-app.post("/", (req, res) => {
-  allIdAscending.push(myId());
+app.post("/", async (req, res) => {
+  const newId = myId();
+  allIdAscending.push(newId);
   console.log(allIdAscending);
+  const hashedPassword = await encryption(req.body.password);
   data.push({
-    id: allIdAscending[data.length],
+    id: newId,
     email: req.body.email,
-    password: req.body.password,
+    password: hashedPassword,
   });
   console.log(...data);
   res.send(`User created`);
 });
 
-app.put("/:id", (req, res) => {
+app.put("/:id", async (req, res) => {
   const userIndex = data.findIndex((user) => user.id === req.params.id);
   data[userIndex].email = req.body.email;
-  data[userIndex].password = req.body.password;
+  const hashedPassword = await encryption(req.body.password);
+  data[userIndex].password = hashedPassword;
   console.log(data[userIndex]);
   res.send(`User has been edited`);
 });
@@ -76,12 +97,13 @@ app.delete("/:id", (req, res) => {
   res.send(`User has been deleted`);
 });
 
-app.post("/user", (req, res) => {
-  const ifUser = data.filter(
-    (user) =>
-      user.email === req.body.email && user.password === req.body.password
-  );
-  ifUser.length === 0
-    ? res.send(`wrong credentials`)
-    : res.send(`User is connected`);
+app.post("/user", async (req, res) => {
+  try {
+    const user = data.find((user) => user.email === req.body.email);
+    user && (await bcrypt.compare(req.body.password, user.password))
+      ? res.send(`User is connected`)
+      : res.send(`wrong credentials`);
+  } catch (err) {
+    console.log(err);
+  }
 });
