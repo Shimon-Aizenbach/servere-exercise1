@@ -53,16 +53,16 @@ app.post("/", (req, res) => {
   allIdAscending.push(myId());
   console.log(allIdAscending);
   data.push({
-    id: allIdAscending[data.length], 
-    email: req.body.email, 
+    id: allIdAscending[data.length],
+    email: req.body.email,
     password: req.body.password,
-  }); 
-  console.log(...data); 
+  });
+  console.log(...data);
   res.send(`User created`);
 });
 
 app.put("/:id", (req, res) => {
-  const userIndex = data.findIndex(user => user.id === req.params.id)
+  const userIndex = data.findIndex((user) => user.id === req.params.id);
   data[userIndex].email = req.body.email;
   data[userIndex].password = req.body.password;
   console.log(data[userIndex]);
@@ -70,8 +70,18 @@ app.put("/:id", (req, res) => {
 });
 
 app.delete("/:id", (req, res) => {
-  const userIndex = data.findIndex(user => user.id === req.params.id)
+  const userIndex = data.findIndex((user) => user.id === req.params.id);
   data.splice(userIndex, 1);
   console.log(data);
-  res.send(`User has been deleted`); 
+  res.send(`User has been deleted`);
+});
+
+app.post("/user", (req, res) => {
+  const ifUser = data.filter(
+    (user) =>
+      user.email === req.body.email && user.password === req.body.password
+  );
+  ifUser.length === 0
+    ? res.send(`wrong credentials`)
+    : res.send(`User is connected`);
 });
