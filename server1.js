@@ -1,14 +1,14 @@
 const express = require(`express`);
 const morgan = require(`morgan`);
 const cors = require(`cors`);
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 const myId = () => uuidv4();
 const allIdAscending = [
-   `8cec6301-bd35-48e7-b17d-5e0813a9ba5b`,
-   `688152d5-0a75-4df8-ba0b-2a50fad4d27b`,
-  `ff2def83-b3d7-4714-b533-c3c5cb7dd0cf`
-]
+  `8cec6301-bd35-48e7-b17d-5e0813a9ba5b`,
+  `688152d5-0a75-4df8-ba0b-2a50fad4d27b`,
+  `ff2def83-b3d7-4714-b533-c3c5cb7dd0cf`,
+];
 
 const data = [
   {
@@ -36,7 +36,7 @@ app.use(cors());
 app.use(morgan(`tiny`));
 app.use(express.json());
 app.get("/", (req, res) => {
-  res.send( 
+  res.send(
     data.map(
       (user) =>
         `id: ${user.id}, email: ${user.email}, password: ${user.password}`
@@ -50,26 +50,28 @@ app.get("/:id", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-  allIdAscending.push(myId())
-  console.log(allIdAscending)
+  allIdAscending.push(myId());
+  console.log(allIdAscending);
   data.push({
-    id: allIdAscending[data.length],
-    email: req.body.email,
+    id: allIdAscending[data.length], 
+    email: req.body.email, 
     password: req.body.password,
-  });
-  console.log(...data);
+  }); 
+  console.log(...data); 
   res.send(`User created`);
 });
 
 app.put("/:id", (req, res) => {
-  data[req.params.id - 1].email = req.body.email;
-  data[req.params.id - 1].password = req.body.password;
-  console.log(data[req.params.id - 1]);
+  const userIndex = data.findIndex(user => user.id === req.params.id)
+  data[userIndex].email = req.body.email;
+  data[userIndex].password = req.body.password;
+  console.log(data[userIndex]);
   res.send(`User has been edited`);
 });
 
 app.delete("/:id", (req, res) => {
-  data[req.params.id - 1] = {};
-  console.log(data[req.params.id - 1]);
-  res.send(`User has been deleted`);
+  const userIndex = data.findIndex(user => user.id === req.params.id)
+  data.splice(userIndex, 1);
+  console.log(data);
+  res.send(`User has been deleted`); 
 });
